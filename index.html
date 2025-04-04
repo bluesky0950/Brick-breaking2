@@ -92,14 +92,15 @@
       const width = Math.min(window.innerWidth - 20, 480);
       canvas.width = width;
       canvas.height = width * 0.66;
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      dx = isMobile ? 1.5 : 3;
+      dy = isMobile ? -1.5 : -3;
     }
 
     function initGame() {
       setCanvasSize();
       x = canvas.width / 2;
       y = canvas.height - 30;
-      dx = 1.5;
-      dy = -1.5;
       paddleWidth = canvas.width / 4.5;
       paddleX = (canvas.width - paddleWidth) / 2;
 
@@ -192,8 +193,9 @@
           } else {
             x = canvas.width / 2;
             y = canvas.height - 30;
-            dx = 1.5;
-            dy = -1.5;
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            dx = isMobile ? 1.5 : 3;
+            dy = isMobile ? -1.5 : -3;
             paddleX = (canvas.width - paddleWidth) / 2;
             return;
           }
@@ -266,9 +268,9 @@
       e.preventDefault();
     });
 
-    document.getElementById("startBtn").onclick = startGame;
-    document.getElementById("resumeBtn").onclick = resumeGame;
-    document.getElementById("exitBtn").onclick = exitGame;
+    document.getElementById("startBtn").addEventListener("click", startGame);
+    document.getElementById("resumeBtn").addEventListener("click", resumeGame);
+    document.getElementById("exitBtn").addEventListener("click", exitGame);
   </script>
 </body>
 </html>
