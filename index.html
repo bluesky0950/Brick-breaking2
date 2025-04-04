@@ -48,6 +48,12 @@
   </style>
 </head>
 <body>
+  <audio id="bgm" src="bgm.mp3" loop autoplay muted playsinline></audio>
+  <audio id="bounce-sound" src="bounce.mp3" playsinline></audio>
+  <audio id="brick-sound" src="brick.mp3" playsinline></audio>
+  <audio id="start-sound" src="start.mp3" playsinline></audio>
+  <audio id="gameover-sound" src="gameover.mp3" playsinline></audio>
+
   <div id="buttonBox">
     <button id="startBtn">게임 시작</button>
     <button id="resumeBtn" style="display:none;">게임 재시작</button>
@@ -60,8 +66,22 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
+    const bgm = document.getElementById("bgm");
+    const bounceSound = document.getElementById("bounce-sound");
+    const brickSound = document.getElementById("brick-sound");
+    const startSound = document.getElementById("start-sound");
+    const gameoverSound = document.getElementById("gameover-sound");
+
+    document.body.addEventListener('click', () => {
+      bgm.muted = false;
+      bounceSound.muted = false;
+      brickSound.muted = false;
+      startSound.muted = false;
+      gameoverSound.muted = false;
+    }, { once: true });
+
     let ballRadius = 10, x, y, dx, dy;
-    let paddleHeight = 10, paddleWidth, paddleX;
+    let paddleHeight = 16, paddleWidth, paddleX;
     let rightPressed = false, leftPressed = false;
     let brickRowCount = 3, brickColumnCount = 5, brickWidth, brickHeight = 20;
     let brickPadding = 10, brickOffsetTop = 30, brickOffsetLeft = 30;
@@ -80,7 +100,7 @@
       y = canvas.height - 30;
       dx = 1.5;
       dy = -1.5;
-      paddleWidth = canvas.width / 5;
+      paddleWidth = canvas.width / 4.5;
       paddleX = (canvas.width - paddleWidth) / 2;
 
       bricks = [];
@@ -165,6 +185,7 @@
         } else {
           lives--;
           if (!lives) {
+            gameoverSound.play();
             alert("게임 오버! 점수: " + score);
             resetGameUI();
             return;
@@ -191,6 +212,8 @@
     function startGame() {
       setCanvasSize();
       initGame();
+      startSound.play();
+      bgm.play();
       document.getElementById("startBtn").style.display = "none";
       document.getElementById("resumeBtn").style.display = "none";
       document.getElementById("exitBtn").style.display = "none";
@@ -227,7 +250,6 @@
       document.getElementById("exitBtn").style.display = "inline-block";
     }
 
-    // 키보드 컨트롤
     document.addEventListener("keydown", e => {
       if (e.key === "ArrowRight") rightPressed = true;
       else if (e.key === "ArrowLeft") leftPressed = true;
@@ -237,7 +259,6 @@
       else if (e.key === "ArrowLeft") leftPressed = false;
     });
 
-    // 터치 컨트롤
     canvas.addEventListener("touchmove", function (e) {
       const rect = canvas.getBoundingClientRect();
       const touchX = e.touches[0].clientX - rect.left;
@@ -245,7 +266,6 @@
       e.preventDefault();
     });
 
-    // 버튼 연결
     document.getElementById("startBtn").onclick = startGame;
     document.getElementById("resumeBtn").onclick = resumeGame;
     document.getElementById("exitBtn").onclick = exitGame;
