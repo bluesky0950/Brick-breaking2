@@ -2,57 +2,68 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>벽돌깨기 게임</title>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      font-family: sans-serif;
-      background-color: #f4f4f4;
-      overflow-y: auto;
-    }
     canvas {
+      background: #eee;
       display: block;
       margin: 0 auto;
-      background: #eee;
       border: 2px solid #333;
-      max-width: 100vw;
-      width: 100%;
-      height: auto;
     }
+
     #buttonBox {
       display: flex;
       justify-content: center;
-      flex-wrap: wrap;
-      margin: 10px;
+      margin: 20px;
       gap: 10px;
+      flex-wrap: wrap;
     }
+
     #buttonBox button {
       padding: 12px 24px;
-      font-size: 16px;
+      font-size: 18px;
       background-color: #0095DD;
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      flex: 1;
+      max-width: 160px;
     }
+
     #buttonBox button:hover {
       background-color: #0077bb;
     }
+
     #successMessage {
       text-align: center;
-      font-size: 18px;
+      font-size: 20px;
       font-weight: bold;
       color: green;
       margin-top: 10px;
       display: none;
     }
+
+    @media (max-width: 500px) {
+      #buttonBox {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      #buttonBox button {
+        width: 80%;
+        max-width: none;
+        font-size: 16px;
+      }
+
+      canvas {
+        width: 100% !important;
+        height: auto !important;
+      }
+    }
   </style>
 </head>
-<body tabindex="0" onload="window.focus()">
+<body>
   <!-- 🎵 사운드 -->
   <audio id="bgm" src="bgm.mp3" loop></audio>
   <audio id="bounce-sound" src="bounce.mp3"></audio>
@@ -71,7 +82,7 @@
   <div id="successMessage">🎉 축하합니다! 게임을 클리어하셨습니다!</div>
 
   <!-- 캔버스 -->
-  <canvas id="gameCanvas"></canvas>
+  <canvas id="gameCanvas" width="480" height="320"></canvas>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
@@ -87,30 +98,38 @@
 
     let gameRunning = false;
     let animationId;
-    let ballRadius = 8, x, y, dx = 2, dy = -2;
-    let paddleHeight = 16, paddleWidth, paddleX;
-    let rightPressed = false, leftPressed = false;
-    let brickRowCount = 3, brickColumnCount = 5;
-    let brickWidth, brickHeight = 20;
-    let brickPadding = 10, brickOffsetTop = 30, brickOffsetLeft = 30;
-    let bricks = [], score = 0, lives = 3;
+
+    let ballRadius, x, y, dx, dy;
+    let paddleHeight, paddleWidth, paddleX;
+    let rightPressed = false;
+    let leftPressed = false;
+    let brickRowCount, brickColumnCount, brickWidth, brickHeight;
+    let brickPadding, brickOffsetTop, brickOffsetLeft;
+    let bricks = [];
+    let score = 0, lives = 3;
     let gameCleared = false;
 
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight * 0.65;
-    }
-
     function initGame() {
-      resizeCanvas();
+      ballRadius = 10;
       x = canvas.width / 2;
       y = canvas.height - 30;
       dx = 2;
       dy = -2;
-      paddleWidth = canvas.width / 4;
+
+      paddleHeight = 10;
+      paddleWidth = 75;
       paddleX = (canvas.width - paddleWidth) / 2;
 
-      brickWidth = (canvas.width - brickOffsetLeft * 2 - brickPadding * (brickColumnCount - 1)) / brickColumnCount;
+      rightPressed = false;
+      leftPressed = false;
+
+      brickRowCount = 3;
+      brickColumnCount = 5;
+      brickWidth = 75;
+      brickHeight = 20;
+      brickPadding = 10;
+      brickOffsetTop = 30;
+      brickOffsetLeft = 30;
 
       bricks = [];
       for (let c = 0; c < brickColumnCount; c++) {
@@ -160,13 +179,13 @@
     }
 
     function drawScore() {
-      ctx.font = "14px Arial";
+      ctx.font = "16px Arial";
       ctx.fillStyle = "#000";
       ctx.fillText("Score: " + score, 8, 20);
     }
 
     function drawLives() {
-      ctx.font = "14px Arial";
+      ctx.font = "16px Arial";
       ctx.fillStyle = "#000";
       ctx.fillText("Lives: " + lives, canvas.width - 80, 20);
     }
@@ -176,7 +195,12 @@
         for (let r = 0; r < brickRowCount; r++) {
           const b = bricks[c][r];
           if (b.status === 1) {
-            if (x > b.x && x < b.x + brickWidth && y > b.y && y < b.y + brickHeight) {
+            if (
+              x > b.x &&
+              x < b.x + brickWidth &&
+              y > b.y &&
+              y < b.y + brickHeight
+            ) {
               dy = -dy;
               b.status = 0;
               brickSound.currentTime = 0;
@@ -184,7 +208,9 @@
               score++;
               if (!gameCleared && score === brickRowCount * brickColumnCount) {
                 gameCleared = true;
-                setTimeout(() => handleGameSuccess(), 500);
+                setTimeout(() => {
+                  handleGameSuccess();
+                }, 500);
               }
             }
           }
@@ -193,7 +219,6 @@
     }
 
     function draw() {
-      if (!gameRunning) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawBricks();
       drawBall();
@@ -207,6 +232,7 @@
         bounceSound.currentTime = 0;
         bounceSound.play();
       }
+
       if (y + dy < ballRadius) {
         dy = -dy;
         bounceSound.currentTime = 0;
@@ -260,11 +286,13 @@
 
     function resumeGame() {
       document.getElementById("resumeBtn").style.display = "none";
+
       x = canvas.width / 2;
       y = canvas.height - 30;
       dx = 2;
       dy = -2;
       paddleX = (canvas.width - paddleWidth) / 2;
+
       gameRunning = true;
       draw();
     }
@@ -272,22 +300,17 @@
     function endGame() {
       cancelAnimationFrame(animationId);
       gameRunning = false;
-      bgm.pause();
-      bgm.currentTime = 0;
-      alert(`게임 오버! 최종 점수: ${score}점`);
       resetGameUI();
     }
 
     function exitGame() {
       cancelAnimationFrame(animationId);
       gameRunning = false;
-      bgm.pause();
-      bgm.currentTime = 0;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
       resetGameUI();
     }
 
     function resetGameUI() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       document.getElementById("startBtn").style.display = "inline-block";
       document.getElementById("resumeBtn").style.display = "none";
       document.getElementById("successMessage").style.display = "none";
@@ -296,38 +319,18 @@
     function handleGameSuccess() {
       cancelAnimationFrame(animationId);
       gameRunning = false;
-      bgm.pause();
       document.getElementById("successMessage").style.display = "block";
       document.getElementById("startBtn").style.display = "inline-block";
     }
 
-    canvas.addEventListener("touchstart", function (e) {
-      const rect = canvas.getBoundingClientRect();
-      const touchX = e.touches[0].clientX - rect.left;
-      paddleX = Math.max(0, Math.min(canvas.width - paddleWidth, touchX - paddleWidth / 2));
-      e.preventDefault();
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Right" || e.key === "ArrowRight") rightPressed = true;
+      else if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = true;
     });
 
-    canvas.addEventListener("touchmove", function (e) {
-      const rect = canvas.getBoundingClientRect();
-      const touchX = e.touches[0].clientX - rect.left;
-      paddleX = Math.max(0, Math.min(canvas.width - paddleWidth, touchX - paddleWidth / 2));
-      e.preventDefault();
-    });
-
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "ArrowRight") rightPressed = true;
-      else if (e.key === "ArrowLeft") leftPressed = true;
-    });
-
-    document.addEventListener("keyup", function (e) {
-      if (e.key === "ArrowRight") rightPressed = false;
-      else if (e.key === "ArrowLeft") leftPressed = false;
-    });
-
-    window.addEventListener("resize", () => {
-      resizeCanvas();
-    });
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "Right" || e.key === "ArrowRight") rightPressed = false;
+      else if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = false;
     });
   </script>
 </body>
