@@ -12,14 +12,15 @@
       height: 100%;
       overflow: hidden;
       font-family: sans-serif;
+      background-color: #f4f4f4;
     }
     canvas {
       background: #eee;
       display: block;
       margin: 0 auto;
       border: 2px solid #333;
-      max-width: 100%;
-      height: auto;
+      width: 100vw;
+      height: 70vh;
       touch-action: none;
     }
     #buttonBox {
@@ -96,8 +97,8 @@
     let gameCleared = false;
 
     function resizeCanvas() {
-      canvas.width = Math.min(window.innerWidth - 20, 480);
-      canvas.height = canvas.width * 0.75;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight * 0.7;
     }
 
     function initGame() {
@@ -302,16 +303,6 @@
       const touchX = e.touches[0].clientX - rect.left;
       paddleX = touchX - paddleWidth / 2;
       e.preventDefault();
-    });
-
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Right" || e.key === "ArrowRight") rightPressed = true;
-      else if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = true;
-    });
-
-    document.addEventListener("keyup", (e) => {
-      if (e.key === "Right" || e.key === "ArrowRight") rightPressed = false;
-      else if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = false;
     });
 
     window.addEventListener("resize", () => {
