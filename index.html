@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>벽돌깨기 게임</title>
   <style>
     html, body {
@@ -13,15 +13,13 @@
       overflow: hidden;
       font-family: sans-serif;
       background-color: #f4f4f4;
+      touch-action: none;
     }
     canvas {
-      background: #eee;
       display: block;
       margin: 0 auto;
+      background: #eee;
       border: 2px solid #333;
-      width: 100vw;
-      height: 70vh;
-      touch-action: none;
     }
     #buttonBox {
       display: flex;
@@ -52,7 +50,7 @@
     }
   </style>
 </head>
-<body ontouchstart="">
+<body>
   <!-- 🎵 사운드 -->
   <audio id="bgm" src="bgm.mp3" loop></audio>
   <audio id="bounce-sound" src="bounce.mp3"></audio>
@@ -89,7 +87,6 @@
     let animationId;
     let ballRadius = 8, x, y, dx = 2, dy = -2;
     let paddleHeight = 10, paddleWidth, paddleX;
-    let rightPressed = false, leftPressed = false;
     let brickRowCount = 3, brickColumnCount = 5;
     let brickWidth, brickHeight = 20;
     let brickPadding = 10, brickOffsetTop = 30, brickOffsetLeft = 30;
@@ -98,7 +95,7 @@
 
     function resizeCanvas() {
       canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight * 0.7;
+      canvas.height = window.innerHeight * 0.65;
     }
 
     function initGame() {
@@ -298,10 +295,17 @@
       document.getElementById("exitBtn").style.display = "inline-block";
     }
 
+    canvas.addEventListener("touchstart", function (e) {
+      const rect = canvas.getBoundingClientRect();
+      const touchX = e.touches[0].clientX - rect.left;
+      paddleX = Math.max(0, Math.min(canvas.width - paddleWidth, touchX - paddleWidth / 2));
+      e.preventDefault();
+    });
+
     canvas.addEventListener("touchmove", function (e) {
       const rect = canvas.getBoundingClientRect();
       const touchX = e.touches[0].clientX - rect.left;
-      paddleX = touchX - paddleWidth / 2;
+      paddleX = Math.max(0, Math.min(canvas.width - paddleWidth, touchX - paddleWidth / 2));
       e.preventDefault();
     });
 
