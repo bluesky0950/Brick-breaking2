@@ -28,6 +28,7 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      z-index: 10;
     }
     #buttonBox button:hover {
       background: #0077bb;
@@ -47,7 +48,7 @@
     }
   </style>
 </head>
-<body>
+<body ontouchstart="">
   <audio id="bgm" src="bgm.mp3" loop autoplay muted playsinline></audio>
   <audio id="bounce-sound" src="bounce.mp3" playsinline></audio>
   <audio id="brick-sound" src="brick.mp3" playsinline></audio>
@@ -72,13 +73,14 @@
     const startSound = document.getElementById("start-sound");
     const gameoverSound = document.getElementById("gameover-sound");
 
-    document.body.addEventListener('click', () => {
-      bgm.muted = false;
-      bounceSound.muted = false;
-      brickSound.muted = false;
-      startSound.muted = false;
-      gameoverSound.muted = false;
-    }, { once: true });
+    document.body.addEventListener('touchend', unmuteAll);
+    document.body.addEventListener('click', unmuteAll);
+
+    function unmuteAll() {
+      [bgm, bounceSound, brickSound, startSound, gameoverSound].forEach(audio => {
+        audio.muted = false;
+      });
+    }
 
     let ballRadius = 10, x, y, dx, dy;
     let paddleHeight = 16, paddleWidth, paddleX;
@@ -189,6 +191,7 @@
             gameoverSound.play();
             alert("게임 오버! 점수: " + score);
             resetGameUI();
+            gameRunning = false;
             return;
           } else {
             x = canvas.width / 2;
@@ -197,7 +200,6 @@
             dx = isMobile ? 1.5 : 3;
             dy = isMobile ? -1.5 : -3;
             paddleX = (canvas.width - paddleWidth) / 2;
-            return;
           }
         }
       }
@@ -208,10 +210,13 @@
       if (rightPressed && paddleX < canvas.width - paddleWidth) paddleX += 4;
       else if (leftPressed && paddleX > 0) paddleX -= 4;
 
-      animationId = requestAnimationFrame(draw);
+      if (gameRunning) {
+        animationId = requestAnimationFrame(draw);
+      }
     }
 
     function startGame() {
+      unmuteAll();
       setCanvasSize();
       initGame();
       startSound.play();
