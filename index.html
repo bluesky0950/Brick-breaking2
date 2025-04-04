@@ -2,14 +2,14 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>벽돌깨기 게임</title>
   <style>
     body {
       margin: 0;
       padding: 0;
       font-family: 'Pretendard', sans-serif;
-      background: #f9fcff;
+      background: #f4f8fb;
     }
 
     canvas {
@@ -25,19 +25,21 @@
 
     #buttonBox {
       display: flex;
-      justify-content: center;
-      margin: 20px;
-      gap: 10px;
       flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      padding: 15px;
     }
 
     #buttonBox button {
-      padding: 12px 24px;
-      font-size: 18px;
-      background-color: #0095DD;
-      color: white;
+      flex: 1 1 auto;
+      min-width: 120px;
+      font-size: 16px;
+      padding: 12px 20px;
       border: none;
       border-radius: 8px;
+      background-color: #0095DD;
+      color: white;
       cursor: pointer;
     }
 
@@ -47,7 +49,7 @@
 
     #successMessage {
       text-align: center;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: bold;
       color: green;
       margin-top: 10px;
@@ -56,7 +58,7 @@
   </style>
 </head>
 <body>
-  <!-- 사운드 -->
+  <!-- 🎵 사운드 -->
   <audio id="bgm" src="bgm.mp3" loop></audio>
   <audio id="bounce-sound" src="bounce.mp3"></audio>
   <audio id="brick-sound" src="brick.mp3"></audio>
@@ -70,7 +72,7 @@
     <button id="exitBtn" onclick="exitGame()" style="display:none;">게임 종료</button>
   </div>
 
-  <!-- 성공 메시지 -->
+  <!-- 축하 메시지 -->
   <div id="successMessage">🎉 축하합니다! 게임을 클리어하셨습니다!</div>
 
   <!-- 게임 화면 -->
@@ -103,15 +105,15 @@
     function setCanvasSize() {
       const width = Math.min(window.innerWidth - 20, 480);
       canvas.width = width;
-      canvas.height = width * 0.666;
+      canvas.height = width * 0.66;
     }
 
     function initGame() {
       ballRadius = 10;
       x = canvas.width / 2;
       y = canvas.height - 30;
-      dx = 2;
-      dy = -2;
+      dx = 1.5; // 속도 조절
+      dy = -1.5;
 
       paddleHeight = 10;
       paddleWidth = canvas.width / 5;
@@ -176,13 +178,13 @@
     }
 
     function drawScore() {
-      ctx.font = "16px Arial";
+      ctx.font = "14px Arial";
       ctx.fillStyle = "#000";
       ctx.fillText("Score: " + score, 8, 20);
     }
 
     function drawLives() {
-      ctx.font = "16px Arial";
+      ctx.font = "14px Arial";
       ctx.fillStyle = "#000";
       ctx.fillText("Lives: " + lives, canvas.width - 80, 20);
     }
@@ -256,8 +258,8 @@
       x += dx;
       y += dy;
 
-      if (rightPressed && paddleX < canvas.width - paddleWidth) paddleX += 5;
-      else if (leftPressed && paddleX > 0) paddleX -= 5;
+      if (rightPressed && paddleX < canvas.width - paddleWidth) paddleX += 4;
+      else if (leftPressed && paddleX > 0) paddleX -= 4;
 
       animationId = requestAnimationFrame(draw);
     }
@@ -290,8 +292,8 @@
 
       x = canvas.width / 2;
       y = canvas.height - 30;
-      dx = 2;
-      dy = -2;
+      dx = 1.5;
+      dy = -1.5;
       paddleX = (canvas.width - paddleWidth) / 2;
 
       gameRunning = true;
@@ -332,7 +334,7 @@
       document.getElementById("exitBtn").style.display = "inline-block";
     }
 
-    // 키보드 이동
+    // 키보드
     document.addEventListener("keydown", (e) => {
       if (e.key === "Right" || e.key === "ArrowRight") rightPressed = true;
       else if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = true;
