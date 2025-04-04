@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>벽돌깨기 게임</title>
   <style>
     html, body {
@@ -10,10 +10,9 @@
       padding: 0;
       width: 100%;
       height: 100%;
-      overflow: hidden;
       font-family: sans-serif;
       background-color: #f4f4f4;
-      touch-action: none;
+      overflow-y: auto;
     }
     canvas {
       display: block;
@@ -62,7 +61,7 @@
   <div id="buttonBox">
     <button id="startBtn" onclick="startGame()">게임 시작</button>
     <button id="resumeBtn" onclick="resumeGame()" style="display:none;">게임 재시작</button>
-    <button id="exitBtn" onclick="exitGame()" style="display:none;">게임 종료</button>
+    <button id="exitBtn" onclick="exitGame()">게임 종료</button>
   </div>
 
   <!-- 축하 메시지 -->
@@ -86,7 +85,8 @@
     let gameRunning = false;
     let animationId;
     let ballRadius = 8, x, y, dx = 2, dy = -2;
-    let paddleHeight = 10, paddleWidth, paddleX;
+    let paddleHeight = 16, paddleWidth, paddleX;
+    let rightPressed = false, leftPressed = false;
     let brickRowCount = 3, brickColumnCount = 5;
     let brickWidth, brickHeight = 20;
     let brickPadding = 10, brickOffsetTop = 30, brickOffsetLeft = 30;
@@ -230,13 +230,15 @@
       x += dx;
       y += dy;
 
+      if (rightPressed && paddleX < canvas.width - paddleWidth) paddleX += 5;
+      else if (leftPressed && paddleX > 0) paddleX -= 5;
+
       animationId = requestAnimationFrame(draw);
     }
 
     function startGame() {
       document.getElementById("startBtn").style.display = "none";
       document.getElementById("resumeBtn").style.display = "none";
-      document.getElementById("exitBtn").style.display = "none";
       document.getElementById("successMessage").style.display = "none";
 
       initGame();
@@ -251,12 +253,10 @@
       cancelAnimationFrame(animationId);
       gameRunning = false;
       document.getElementById("resumeBtn").style.display = "inline-block";
-      document.getElementById("exitBtn").style.display = "inline-block";
     }
 
     function resumeGame() {
       document.getElementById("resumeBtn").style.display = "none";
-      document.getElementById("exitBtn").style.display = "none";
       x = canvas.width / 2;
       y = canvas.height - 30;
       dx = 2;
@@ -269,6 +269,8 @@
     function endGame() {
       cancelAnimationFrame(animationId);
       gameRunning = false;
+      bgm.pause();
+      bgm.currentTime = 0;
       alert(`게임 오버! 최종 점수: ${score}점`);
       resetGameUI();
     }
@@ -276,6 +278,8 @@
     function exitGame() {
       cancelAnimationFrame(animationId);
       gameRunning = false;
+      bgm.pause();
+      bgm.currentTime = 0;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       resetGameUI();
     }
@@ -283,16 +287,15 @@
     function resetGameUI() {
       document.getElementById("startBtn").style.display = "inline-block";
       document.getElementById("resumeBtn").style.display = "none";
-      document.getElementById("exitBtn").style.display = "none";
       document.getElementById("successMessage").style.display = "none";
     }
 
     function handleGameSuccess() {
       cancelAnimationFrame(animationId);
       gameRunning = false;
+      bgm.pause();
       document.getElementById("successMessage").style.display = "block";
       document.getElementById("startBtn").style.display = "inline-block";
-      document.getElementById("exitBtn").style.display = "inline-block";
     }
 
     canvas.addEventListener("touchstart", function (e) {
@@ -307,6 +310,16 @@
       const touchX = e.touches[0].clientX - rect.left;
       paddleX = Math.max(0, Math.min(canvas.width - paddleWidth, touchX - paddleWidth / 2));
       e.preventDefault();
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight") rightPressed = true;
+      else if (e.key === "ArrowLeft") leftPressed = true;
+    });
+
+    document.addEventListener("keyup", function (e) {
+      if (e.key === "ArrowRight") rightPressed = false;
+      else if (e.key === "ArrowLeft") leftPressed = false;
     });
 
     window.addEventListener("resize", () => {
