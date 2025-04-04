@@ -1,71 +1,68 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
     <title>벽돌깨기 게임</title>
     <style>
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Arial', sans-serif;
-            background: #f4f8fb;
-            text-align: center;
-        }
-        #buttonBox {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            padding: 10px;
-        }
-        #buttonBox button {
-            font-size: 16px;
-            padding: 10px 20px;
-            background: #0095DD;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            z-index: 10;
-        }
-        #buttonBox button:hover {
-            background: #0077bb;
-        }
-        #successMessage {
-            display: none;
-            font-weight: bold;
-            color: green;
-            margin-top: 10px;
-        }
         canvas {
+            background: #eee;
             display: block;
             margin: 0 auto;
             border: 2px solid #333;
-            background: #eee;
             touch-action: none;
+        }
+
+        #buttonBox {
+            display: flex;
+            justify-content: center;
+            margin: 20px;
+            gap: 10px;
+        }
+
+        #buttonBox button {
+            padding: 12px 24px;
+            font-size: 18px;
+            background-color: #0095DD;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        #buttonBox button:hover {
+            background-color: #0077bb;
+        }
+
+        #successMessage {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: green;
+            margin-top: 10px;
+            display: none;
         }
     </style>
 </head>
-<body ontouchstart="">
-    <audio id="bgm" src="bgm.mp3" loop autoplay muted playsinline></audio>
-    <audio id="bounce-sound" src="bounce.mp3" playsinline></audio>
-    <audio id="brick-sound" src="brick.mp3" playsinline></audio>
-    <audio id="start-sound" src="start.mp3" playsinline></audio>
-    <audio id="gameover-sound" src="gameover.mp3" playsinline></audio>
+<body>
+    <audio id="bgm" src="bgm.mp3" loop></audio>
+    <audio id="bounce-sound" src="bounce.mp3"></audio>
+    <audio id="brick-sound" src="brick.mp3"></audio>
+    <audio id="start-sound" src="start.mp3"></audio>
+    <audio id="gameover-sound" src="gameover.mp3"></audio>
 
     <div id="buttonBox">
-        <button id="startBtn">게임 시작</button>
-        <button id="resumeBtn" style="display:none;">게임 재시작</button>
-        <button id="exitBtn" style="display:none;">게임 종료</button>
+        <button id="startBtn" onclick="startGame()">게임 시작</button>
+        <button id="resumeBtn" onclick="resumeGame()" style="display:none;">게임 재시작</button>
+        <button id="exitBtn" onclick="exitGame()" style="display:none;">게임 종료</button>
     </div>
+
     <div id="successMessage">🎉 축하합니다! 게임을 클리어하셨습니다!</div>
-    <canvas id="gameCanvas"></canvas>
+
+    <canvas id="gameCanvas" width="480" height="320"></canvas>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
 
         const bgm = document.getElementById("bgm");
         const bounceSound = document.getElementById("bounce-sound");
@@ -73,41 +70,44 @@
         const startSound = document.getElementById("start-sound");
         const gameoverSound = document.getElementById("gameover-sound");
 
-        document.body.addEventListener('touchend', unmuteAll);
-        document.body.addEventListener('click', unmuteAll);
+        bgm.volume = 0.2;
 
-        function unmuteAll() {
-            [bgm, bounceSound, brickSound, startSound, gameoverSound].forEach(audio => {
-                audio.muted = false;
-            });
-        }
+        let gameRunning = false;
+        let animationId;
 
-        let ballRadius = 10, x, y, dx, dy;
-        let paddleHeight = 16, paddleWidth, paddleX;
-        let rightPressed = false, leftPressed = false;
-        let brickRowCount = 3, brickColumnCount = 5, brickWidth, brickHeight = 20;
-        let brickPadding = 10, brickOffsetTop = 30, brickOffsetLeft = 30;
-        let bricks = [], score = 0, lives = 3;
-        let animationId, gameRunning = false, gameCleared = false;
-
-        function setCanvasSize() {
-            const width = Math.min(window.innerWidth - 20, 480);
-            canvas.width = width;
-            canvas.height = width * 0.66;
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            dx = isMobile ? 1.5 : 3;
-            dy = isMobile ? -1.5 : -3;
-        }
+        let ballRadius, x, y, dx, dy;
+        let paddleHeight, paddleWidth, paddleX;
+        let rightPressed = false;
+        let leftPressed = false;
+        let brickRowCount, brickColumnCount, brickWidth, brickHeight;
+        let brickPadding, brickOffsetTop, brickOffsetLeft;
+        let bricks = [];
+        let score = 0, lives = 3;
+        let gameCleared = false;
 
         function initGame() {
-            setCanvasSize();
+            ballRadius = 10;
             x = canvas.width / 2;
             y = canvas.height - 30;
-            paddleWidth = canvas.width / 4.5;
+            dx = 2;
+            dy = -2;
+
+            paddleHeight = 10;
+            paddleWidth = 75;
             paddleX = (canvas.width - paddleWidth) / 2;
 
+            rightPressed = false;
+            leftPressed = false;
+
+            brickRowCount = 3;
+            brickColumnCount = 5;
+            brickWidth = 75;
+            brickHeight = 20;
+            brickPadding = 10;
+            brickOffsetTop = 30;
+            brickOffsetLeft = 30;
+
             bricks = [];
-            brickWidth = (canvas.width - brickOffsetLeft * 2 - brickPadding * (brickColumnCount - 1)) / brickColumnCount;
             for (let c = 0; c < brickColumnCount; c++) {
                 bricks[c] = [];
                 for (let r = 0; r < brickRowCount; r++) {
@@ -139,9 +139,9 @@
         function drawBricks() {
             for (let c = 0; c < brickColumnCount; c++) {
                 for (let r = 0; r < brickRowCount; r++) {
-                    if (bricks[c][r].status == 1) {
-                        let brickX = brickOffsetLeft + c * (brickWidth + brickPadding);
-                        let brickY = brickOffsetTop + r * (brickHeight + brickPadding);
+                    if (bricks[c][r].status === 1) {
+                        const brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
+                        const brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
                         bricks[c][r].x = brickX;
                         bricks[c][r].y = brickY;
                         ctx.beginPath();
@@ -154,19 +154,40 @@
             }
         }
 
+        function drawScore() {
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "#000";
+            ctx.fillText("Score: " + score, 8, 20);
+        }
+
+        function drawLives() {
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "#000";
+            ctx.fillText("Lives: " + lives, canvas.width - 80, 20);
+        }
+
         function collisionDetection() {
             for (let c = 0; c < brickColumnCount; c++) {
                 for (let r = 0; r < brickRowCount; r++) {
                     const b = bricks[c][r];
-                    if (b.status === 1 && x > b.x && x < b.x + brickWidth && y > b.y && y < b.y + brickHeight) {
-                        dy = -dy;
-                        b.status = 0;
-                        score++;
-                        if (!gameCleared && score === brickRowCount * brickColumnCount) {
-                            gameCleared = true;
-                            setTimeout(() => {
-                                handleGameSuccess();
-                            }, 300);
+                    if (b.status === 1) {
+                        if (
+                            x > b.x &&
+                            x < b.x + brickWidth &&
+                            y > b.y &&
+                            y < b.y + brickHeight
+                        ) {
+                            dy = -dy;
+                            b.status = 0;
+                            brickSound.currentTime = 0;
+                            brickSound.play();
+                            score++;
+                            if (!gameCleared && score === brickRowCount * brickColumnCount) {
+                                gameCleared = true;
+                                setTimeout(() => {
+                                    handleGameSuccess();
+                                }, 500); // 🎯 자연스럽게 화면이 멈춘 뒤 메시지 출력
+                            }
                         }
                     }
                 }
@@ -178,28 +199,35 @@
             drawBricks();
             drawBall();
             drawPaddle();
+            drawScore();
+            drawLives();
             collisionDetection();
 
-            if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) dx = -dx;
-            if (y + dy < ballRadius) dy = -dy;
-            else if (y + dy > canvas.height - ballRadius) {
+            if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
+                dx = -dx;
+                bounceSound.currentTime = 0;
+                bounceSound.play();
+            }
+
+            if (y + dy < ballRadius) {
+                dy = -dy;
+                bounceSound.currentTime = 0;
+                bounceSound.play();
+            } else if (y + dy > canvas.height - ballRadius) {
                 if (x > paddleX && x < paddleX + paddleWidth) {
                     dy = -dy;
+                    bounceSound.currentTime = 0;
+                    bounceSound.play();
                 } else {
                     lives--;
-                    if (!lives) {
+                    if (lives === 0) {
+                        gameoverSound.currentTime = 0;
                         gameoverSound.play();
-                        alert("게임 오버! 점수: " + score);
-                        resetGameUI();
-                        gameRunning = false;
+                        endGame();
                         return;
                     } else {
-                        x = canvas.width / 2;
-                        y = canvas.height - 30;
-                        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                        dx = isMobile ? 1.5 : 3;
-                        dy = isMobile ? -1.5 : -3;
-                        paddleX = (canvas.width - paddleWidth) / 2;
+                        pauseGame();
+                        return;
                     }
                 }
             }
@@ -207,64 +235,90 @@
             x += dx;
             y += dy;
 
-            if (rightPressed && paddleX < canvas.width - paddleWidth) paddleX += 4;
-            else if (leftPressed && paddleX > 0) paddleX -= 4;
+            if (rightPressed && paddleX < canvas.width - paddleWidth) paddleX += 5;
+            else if (leftPressed && paddleX > 0) paddleX -= 5;
 
-            if (gameRunning) {
-                animationId = requestAnimationFrame(draw);
-            }
+            animationId = requestAnimationFrame(draw);
         }
 
         function startGame() {
-            unmuteAll();
-            setCanvasSize();
-            initGame();
-            startSound.play();
-            bgm.play();
             document.getElementById("startBtn").style.display = "none";
             document.getElementById("resumeBtn").style.display = "none";
             document.getElementById("exitBtn").style.display = "none";
             document.getElementById("successMessage").style.display = "none";
+
+            initGame();
+            startSound.currentTime = 0;
+            startSound.play();
+            bgm.play();
             gameRunning = true;
             draw();
+        }
+
+        function pauseGame() {
+            cancelAnimationFrame(animationId);
+            gameRunning = false;
+            document.getElementById("resumeBtn").style.display = "inline-block";
+            document.getElementById("exitBtn").style.display = "inline-block";
         }
 
         function resumeGame() {
             document.getElementById("resumeBtn").style.display = "none";
             document.getElementById("exitBtn").style.display = "none";
+
+            x = canvas.width / 2;
+            y = canvas.height - 30;
+            dx = 2;
+            dy = -2;
+            paddleX = (canvas.width - paddleWidth) / 2;
+
             gameRunning = true;
             draw();
+        }
+
+        function endGame() {
+            cancelAnimationFrame(animationId);
+            gameRunning = false;
+            alert(`게임 오버! 최종 점수: ${score}점`);
+            resetGameUI();
         }
 
         function exitGame() {
             cancelAnimationFrame(animationId);
             gameRunning = false;
-            resetGameUI();
-        }
-
-        function resetGameUI() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             document.getElementById("startBtn").style.display = "inline-block";
             document.getElementById("resumeBtn").style.display = "none";
             document.getElementById("exitBtn").style.display = "none";
             document.getElementById("successMessage").style.display = "none";
-            initGame();
+        }
+
+        function resetGameUI() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            document.getElementById("startBtn").style.display = "inline-block";
+            document.getElementById("resumeBtn").style.display = "none";
+            document.getElementById("exitBtn").style.display = "none";
+            document.getElementById("successMessage").style.display = "none";
         }
 
         function handleGameSuccess() {
             cancelAnimationFrame(animationId);
             gameRunning = false;
+
             document.getElementById("successMessage").style.display = "block";
             document.getElementById("startBtn").style.display = "inline-block";
+            document.getElementById("resumeBtn").style.display = "none";
             document.getElementById("exitBtn").style.display = "inline-block";
         }
 
-        document.addEventListener("keydown", e => {
-            if (e.key === "ArrowRight") rightPressed = true;
-            else if (e.key === "ArrowLeft") leftPressed = true;
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Right" || e.key === "ArrowRight") rightPressed = true;
+            else if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = true;
         });
-        document.addEventListener("keyup", e => {
-            if (e.key === "ArrowRight") rightPressed = false;
-            else if (e.key === "ArrowLeft") rightPressed = false;
+
+        document.addEventListener("keyup", (e) => {
+            if (e.key === "Right" || e.key === "ArrowRight") rightPressed = false;
+            else if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = false;
         });
 
         canvas.addEventListener("touchmove", function (e) {
@@ -277,10 +331,6 @@
         canvas.addEventListener("touchstart", function (e) {
             e.preventDefault();
         });
-
-        document.getElementById("startBtn").addEventListener("click", startGame);
-        document.getElementById("resumeBtn").addEventListener("click", resumeGame);
-        document.getElementById("exitBtn").addEventListener("click", exitGame);
     </script>
 </body>
 </html>
