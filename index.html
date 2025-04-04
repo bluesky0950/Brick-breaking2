@@ -2,39 +2,48 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>벽돌깨기 게임</title>
   <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
     canvas {
       background: #eee;
       display: block;
       margin: 0 auto;
       border: 2px solid #333;
+      max-width: 100%;
+      height: auto;
+      touch-action: none;
     }
-
     #buttonBox {
       display: flex;
       justify-content: center;
-      margin: 20px;
+      flex-wrap: wrap;
+      margin: 10px;
       gap: 10px;
     }
-
     #buttonBox button {
       padding: 12px 24px;
-      font-size: 18px;
+      font-size: 16px;
       background-color: #0095DD;
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
     }
-
     #buttonBox button:hover {
       background-color: #0077bb;
     }
-
     #successMessage {
       text-align: center;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: bold;
       color: green;
       margin-top: 10px;
@@ -42,7 +51,7 @@
     }
   </style>
 </head>
-<body>
+<body ontouchstart="">
   <!-- 🎵 사운드 -->
   <audio id="bgm" src="bgm.mp3" loop></audio>
   <audio id="bounce-sound" src="bounce.mp3"></audio>
@@ -61,7 +70,7 @@
   <div id="successMessage">🎉 축하합니다! 게임을 클리어하셨습니다!</div>
 
   <!-- 캔버스 -->
-  <canvas id="gameCanvas" width="480" height="320"></canvas>
+  <canvas id="gameCanvas"></canvas>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
@@ -77,38 +86,30 @@
 
     let gameRunning = false;
     let animationId;
-
-    let ballRadius, x, y, dx, dy;
-    let paddleHeight, paddleWidth, paddleX;
-    let rightPressed = false;
-    let leftPressed = false;
-    let brickRowCount, brickColumnCount, brickWidth, brickHeight;
-    let brickPadding, brickOffsetTop, brickOffsetLeft;
-    let bricks = [];
-    let score = 0, lives = 3;
+    let ballRadius = 8, x, y, dx = 2, dy = -2;
+    let paddleHeight = 10, paddleWidth, paddleX;
+    let rightPressed = false, leftPressed = false;
+    let brickRowCount = 3, brickColumnCount = 5;
+    let brickWidth, brickHeight = 20;
+    let brickPadding = 10, brickOffsetTop = 30, brickOffsetLeft = 30;
+    let bricks = [], score = 0, lives = 3;
     let gameCleared = false;
 
+    function resizeCanvas() {
+      canvas.width = Math.min(window.innerWidth - 20, 480);
+      canvas.height = canvas.width * 0.75;
+    }
+
     function initGame() {
-      ballRadius = 10;
+      resizeCanvas();
       x = canvas.width / 2;
       y = canvas.height - 30;
       dx = 2;
       dy = -2;
-
-      paddleHeight = 10;
-      paddleWidth = 75;
+      paddleWidth = canvas.width / 4;
       paddleX = (canvas.width - paddleWidth) / 2;
 
-      rightPressed = false;
-      leftPressed = false;
-
-      brickRowCount = 3;
-      brickColumnCount = 5;
-      brickWidth = 75;
-      brickHeight = 20;
-      brickPadding = 10;
-      brickOffsetTop = 30;
-      brickOffsetLeft = 30;
+      brickWidth = (canvas.width - brickOffsetLeft * 2 - brickPadding * (brickColumnCount - 1)) / brickColumnCount;
 
       bricks = [];
       for (let c = 0; c < brickColumnCount; c++) {
@@ -158,13 +159,13 @@
     }
 
     function drawScore() {
-      ctx.font = "16px Arial";
+      ctx.font = "14px Arial";
       ctx.fillStyle = "#000";
       ctx.fillText("Score: " + score, 8, 20);
     }
 
     function drawLives() {
-      ctx.font = "16px Arial";
+      ctx.font = "14px Arial";
       ctx.fillStyle = "#000";
       ctx.fillText("Lives: " + lives, canvas.width - 80, 20);
     }
@@ -174,12 +175,7 @@
         for (let r = 0; r < brickRowCount; r++) {
           const b = bricks[c][r];
           if (b.status === 1) {
-            if (
-              x > b.x &&
-              x < b.x + brickWidth &&
-              y > b.y &&
-              y < b.y + brickHeight
-            ) {
+            if (x > b.x && x < b.x + brickWidth && y > b.y && y < b.y + brickHeight) {
               dy = -dy;
               b.status = 0;
               brickSound.currentTime = 0;
@@ -187,9 +183,7 @@
               score++;
               if (!gameCleared && score === brickRowCount * brickColumnCount) {
                 gameCleared = true;
-                setTimeout(() => {
-                  handleGameSuccess();
-                }, 500);
+                setTimeout(() => handleGameSuccess(), 500);
               }
             }
           }
@@ -199,7 +193,6 @@
 
     function draw() {
       if (!gameRunning) return;
-
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawBricks();
       drawBall();
@@ -213,7 +206,6 @@
         bounceSound.currentTime = 0;
         bounceSound.play();
       }
-
       if (y + dy < ballRadius) {
         dy = -dy;
         bounceSound.currentTime = 0;
@@ -239,9 +231,6 @@
 
       x += dx;
       y += dy;
-
-      if (rightPressed && paddleX < canvas.width - paddleWidth) paddleX += 5;
-      else if (leftPressed && paddleX > 0) paddleX -= 5;
 
       animationId = requestAnimationFrame(draw);
     }
@@ -270,13 +259,11 @@
     function resumeGame() {
       document.getElementById("resumeBtn").style.display = "none";
       document.getElementById("exitBtn").style.display = "none";
-
       x = canvas.width / 2;
       y = canvas.height - 30;
       dx = 2;
       dy = -2;
       paddleX = (canvas.width - paddleWidth) / 2;
-
       gameRunning = true;
       draw();
     }
@@ -305,12 +292,17 @@
     function handleGameSuccess() {
       cancelAnimationFrame(animationId);
       gameRunning = false;
-
       document.getElementById("successMessage").style.display = "block";
       document.getElementById("startBtn").style.display = "inline-block";
-      document.getElementById("resumeBtn").style.display = "none";
       document.getElementById("exitBtn").style.display = "inline-block";
     }
+
+    canvas.addEventListener("touchmove", function (e) {
+      const rect = canvas.getBoundingClientRect();
+      const touchX = e.touches[0].clientX - rect.left;
+      paddleX = touchX - paddleWidth / 2;
+      e.preventDefault();
+    });
 
     document.addEventListener("keydown", (e) => {
       if (e.key === "Right" || e.key === "ArrowRight") rightPressed = true;
@@ -320,6 +312,10 @@
     document.addEventListener("keyup", (e) => {
       if (e.key === "Right" || e.key === "ArrowRight") rightPressed = false;
       else if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = false;
+    });
+
+    window.addEventListener("resize", () => {
+      if (!gameRunning) resizeCanvas();
     });
   </script>
 </body>
