@@ -16,6 +16,7 @@
     }
 
     #container {
+      width: 100%;
       max-width: 480px;
       margin: 0 auto;
       padding: 20px 10px;
@@ -26,6 +27,8 @@
       display: block;
       margin: 0 auto;
       border: 2px solid #333;
+      width: 100%;
+      height: auto;
     }
 
     #buttonBox {
@@ -130,6 +133,7 @@
       dx = 2;
       dy = -2;
 
+      // 패들 높이를 필요에 따라 조정 (현재 15에서 원하시면 더 늘릴 수 있음)
       paddleHeight = 15;
       paddleWidth = 75;
       paddleX = (canvas.width - paddleWidth) / 2;
@@ -340,6 +344,7 @@
       document.getElementById("startBtn").style.display = "inline-block";
     }
 
+    // 키보드 이벤트
     document.addEventListener("keydown", (e) => {
       if (e.key === "Right" || e.key === "ArrowRight") rightPressed = true;
       else if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = true;
@@ -348,6 +353,27 @@
     document.addEventListener("keyup", (e) => {
       if (e.key === "Right" || e.key === "ArrowRight") rightPressed = false;
       else if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = false;
+    });
+
+    // 터치 이벤트 추가 (스마트폰용)
+    canvas.addEventListener("touchstart", function(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const touchX = touch.clientX - rect.left;
+      paddleX = touchX - paddleWidth / 2;
+      if (paddleX < 0) paddleX = 0;
+      else if (paddleX + paddleWidth > canvas.width) paddleX = canvas.width - paddleWidth;
+    });
+
+    canvas.addEventListener("touchmove", function(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const touchX = touch.clientX - rect.left;
+      paddleX = touchX - paddleWidth / 2;
+      if (paddleX < 0) paddleX = 0;
+      else if (paddleX + paddleWidth > canvas.width) paddleX = canvas.width - paddleWidth;
     });
   </script>
 </body>
