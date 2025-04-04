@@ -4,6 +4,23 @@
   <meta charset="UTF-8">
   <title>벽돌깨기 게임</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background: #fafafa;
+    }
+
+    #container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px 10px;
+    }
+
     canvas {
       background: #eee;
       display: block;
@@ -14,7 +31,7 @@
     #buttonBox {
       display: flex;
       justify-content: center;
-      margin: 20px;
+      margin: 20px 0;
       gap: 10px;
       flex-wrap: wrap;
     }
@@ -55,34 +72,31 @@
         max-width: none;
         font-size: 16px;
       }
-
-      canvas {
-        width: 100% !important;
-        height: auto !important;
-      }
     }
   </style>
 </head>
 <body>
-  <!-- 🎵 사운드 -->
-  <audio id="bgm" src="bgm.mp3" loop></audio>
-  <audio id="bounce-sound" src="bounce.mp3"></audio>
-  <audio id="brick-sound" src="brick.mp3"></audio>
-  <audio id="start-sound" src="start.mp3"></audio>
-  <audio id="gameover-sound" src="gameover.mp3"></audio>
+  <div id="container">
+    <!-- 🎵 사운드 -->
+    <audio id="bgm" src="bgm.mp3" loop></audio>
+    <audio id="bounce-sound" src="bounce.mp3"></audio>
+    <audio id="brick-sound" src="brick.mp3"></audio>
+    <audio id="start-sound" src="start.mp3"></audio>
+    <audio id="gameover-sound" src="gameover.mp3"></audio>
 
-  <!-- 버튼 박스 -->
-  <div id="buttonBox">
-    <button id="startBtn" onclick="startGame()">게임 시작</button>
-    <button id="resumeBtn" onclick="resumeGame()" style="display:none;">게임 재시작</button>
-    <button id="exitBtn" onclick="exitGame()">게임 종료</button>
+    <!-- 버튼 박스 -->
+    <div id="buttonBox">
+      <button id="startBtn" onclick="startGame()">게임 시작</button>
+      <button id="resumeBtn" onclick="resumeGame()" style="display:none;">게임 재시작</button>
+      <button id="exitBtn" onclick="exitGame()">게임 종료</button>
+    </div>
+
+    <!-- 축하 메시지 -->
+    <div id="successMessage">🎉 축하합니다! 게임을 클리어하셨습니다!</div>
+
+    <!-- 캔버스 -->
+    <canvas id="gameCanvas" width="480" height="320"></canvas>
   </div>
-
-  <!-- 축하 메시지 -->
-  <div id="successMessage">🎉 축하합니다! 게임을 클리어하셨습니다!</div>
-
-  <!-- 캔버스 -->
-  <canvas id="gameCanvas" width="480" height="320"></canvas>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
@@ -271,9 +285,10 @@
       document.getElementById("successMessage").style.display = "none";
 
       initGame();
+      bgm.currentTime = 0;
+      bgm.play();
       startSound.currentTime = 0;
       startSound.play();
-      bgm.play();
       gameRunning = true;
       draw();
     }
@@ -286,13 +301,11 @@
 
     function resumeGame() {
       document.getElementById("resumeBtn").style.display = "none";
-
       x = canvas.width / 2;
       y = canvas.height - 30;
       dx = 2;
       dy = -2;
       paddleX = (canvas.width - paddleWidth) / 2;
-
       gameRunning = true;
       draw();
     }
@@ -300,12 +313,16 @@
     function endGame() {
       cancelAnimationFrame(animationId);
       gameRunning = false;
+      bgm.pause();
+      bgm.currentTime = 0;
       resetGameUI();
     }
 
     function exitGame() {
       cancelAnimationFrame(animationId);
       gameRunning = false;
+      bgm.pause();
+      bgm.currentTime = 0;
       resetGameUI();
     }
 
